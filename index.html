@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sản Xuất Pro - Dự Tính Kết Thúc 24H</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #f1f5f9;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .result-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #d946ef 100%);
+        }
+        /* Custom scrollbar for beautiful dropdowns */
+        select::-webkit-scrollbar {
+            width: 6px;
+        }
+        select::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        select::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen py-3 px-3">
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-3">
+            <h1 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400">
+                DỰ TÍNH KẾT THÚC LÔ HÀNG
+            </h1>
+        </header>
+
+        <!-- KẾT QUẢ ĐƯỢC ĐƯA LÊN ĐẦU VÀ THIẾT KẾ GỌN GÀNG HƠN -->
+        <div class="mb-4 glass-card p-4 rounded-2xl shadow-2xl border-t-4 border-indigo-500 relative overflow-hidden">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
+                <div class="text-center md:text-left w-full md:w-auto">
+                    <h3 class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-1 flex items-center justify-center md:justify-start gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                        THỜI ĐIỂM KẾT THÚC DỰ KIẾN (24H)
+                    </h3>
+                    <div id="resultDisplay" class="text-3xl md:text-5xl font-extrabold text-white tracking-normal drop-shadow-md py-1">
+                        --/-- 00:00
+                    </div>
+                    <div id="totalDurationDisplay" class="mt-1 text-slate-300 font-bold text-xs bg-indigo-950/50 py-1 px-2 rounded-lg inline-block">
+                        Tổng thời gian xử lý: 0 giờ 0 phút
+                    </div>
+                </div>
+                <button onclick="calculate()" class="w-full md:w-auto result-gradient hover:scale-105 active:scale-95 text-white font-black py-3 px-8 rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 text-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 7l6 6-6 6" />
+                    </svg>
+                    TÍNH KẾT QUẢ
+                </button>
+            </div>
+            
+            <!-- Chi tiết phân rã thời gian tự động -->
+            <div class="mt-3 pt-3 border-t border-slate-700/50 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
+                <div class="bg-slate-800/40 p-2 rounded-lg border border-slate-700/30">
+                    <span class="text-slate-400 block mb-0.5">Nghỉ giữa giờ tự tính:</span>
+                    <span id="calcBreakTime" class="font-extrabold text-indigo-300">0 phút</span>
+                </div>
+                <div class="bg-slate-800/40 p-2 rounded-lg border border-slate-700/30">
+                    <span class="text-slate-400 block mb-0.5">Nghỉ ăn tự tính:</span>
+                    <span id="calcMealTime" class="font-extrabold text-pink-300">0 phút</span>
+                </div>
+                <div class="bg-slate-800/40 p-2 rounded-lg border border-slate-700/30">
+                    <span class="text-slate-400 block mb-0.5">Thời gian chờ ca sau:</span>
+                    <span id="calcGapTime" class="font-extrabold text-amber-300">0 phút</span>
+                </div>
+                <div class="bg-slate-800/40 p-2 rounded-lg border border-slate-700/30">
+                    <span class="text-slate-400 block mb-0.5">Sản xuất & Dừng máy:</span>
+                    <span id="calcProdTime" class="font-extrabold text-emerald-300">0 phút</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- CỘT TRÁI -->
+            <div class="space-y-4">
+                <!-- THỜI ĐIỂM BẮT ĐẦU - GIỜ 24H HOÀN TOÀN -->
+                <div class="bg-amber-500/10 p-4 rounded-xl shadow-md border-2 border-amber-500/30">
+                    <div class="flex items-center space-x-2 mb-3 text-amber-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h2 class="font-black uppercase text-[11px] tracking-wider">Thời điểm bắt đầu sản xuất</h2>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div>
+                            <label class="block text-[9px] font-bold text-amber-400/80 mb-0.5">NGÀY BẮT ĐẦU</label>
+                            <input type="date" id="startDate" class="w-full p-2 bg-slate-900 border border-amber-500/30 rounded-lg focus:border-amber-400 outline-none font-bold text-white text-base">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[9px] font-bold text-amber-400/80 mb-0.5">GIỜ BẮT ĐẦU (00-23)</label>
+                                <select id="startHour" class="w-full p-2 bg-slate-900 border border-amber-500/30 rounded-lg focus:border-amber-400 outline-none font-extrabold text-white text-base text-center"></select>
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-bold text-amber-400/80 mb-0.5">PHÚT BẮT ĐẦU (00-59)</label>
+                                <select id="startMin" class="w-full p-2 bg-slate-900 border border-amber-500/30 rounded-lg focus:border-amber-400 outline-none font-extrabold text-white text-base text-center"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- THÔNG SỐ SẢN XUẤT -->
+                <div class="glass-card p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
+                    <h2 class="font-bold text-slate-300 uppercase text-[11px] mb-3 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span> Thông số Tacktime
+                    </h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-[9px] font-black text-slate-400 mb-0.5">SỐ SET CẦN SẢN XUẤT</label>
+                            <input type="number" id="totalSets" placeholder="Nhập số set" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:border-indigo-500 outline-none font-bold text-base text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-black text-indigo-400 mb-0.5">TACKTIME (GIÂY / SET)</label>
+                            <input type="number" id="tacktime" value="30" class="w-full p-2.5 bg-slate-900 border border-indigo-500/40 rounded-lg focus:border-indigo-400 outline-none font-bold text-lg text-indigo-300">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI -->
+            <div class="space-y-4">
+                <!-- GIÁN ĐOẠN & NGHỈ NGƠI -->
+                <div class="glass-card p-4 rounded-xl shadow-sm border-l-4 border-pink-500">
+                    <h2 class="font-bold text-slate-300 uppercase text-[11px] mb-3 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-pink-500 rounded-full"></span> Gián đoạn sản xuất
+                    </h2>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-400 mb-0.5 uppercase">Dừng chuyền (phút)</label>
+                            <input type="number" id="downtime" value="0" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg outline-none focus:border-pink-500 font-semibold text-white text-sm">
+                        </div>
+                        <div class="opacity-70 bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex flex-col justify-center">
+                            <span class="text-[8px] font-black text-indigo-400 block uppercase leading-none">Nghỉ giữa giờ cố định</span>
+                            <span class="text-[9px] text-slate-300 mt-1 leading-tight">Tính tự động (04:00, 10:00, 15:00)</span>
+                        </div>
+                    </div>
+
+                    <!-- THỜI ĐIỂM ĂN UỐNG (KHÔNG DÙNG AM/PM) -->
+                    <div class="p-3 bg-pink-950/20 rounded-xl border border-pink-500/20 mb-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[9px] font-black text-pink-400 uppercase tracking-wider">Thời gian đi ăn (Cố định 40 phút)</label>
+                        </div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold text-pink-300/80 whitespace-nowrap">Bắt đầu ăn lúc:</span>
+                            <div class="flex items-center gap-1">
+                                <select id="mealStartHour" class="bg-slate-900 text-white rounded-lg p-1 border border-pink-500/30 font-bold text-center w-14 text-sm"></select>
+                                <span class="text-white font-bold">:</span>
+                                <select id="mealStartMin" class="bg-slate-900 text-white rounded-lg p-1 border border-pink-500/30 font-bold text-center w-14 text-sm"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- THỜI GIAN TRỐNG GIỮA CA (KHÔNG DÙNG AM/PM) -->
+                    <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 shadow-inner">
+                        <label class="block text-[9px] font-black text-slate-400 mb-2 tracking-widest uppercase text-center">Thời gian trống giữa ca</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="text-center p-1.5 bg-slate-800/40 rounded-lg">
+                                <span class="text-[8px] text-slate-400 block mb-1 uppercase">Kết thúc ca lúc</span>
+                                <div class="flex items-center justify-center gap-1">
+                                    <select id="shiftEndHour" class="bg-slate-900 text-white rounded-lg p-1 border border-slate-700 font-bold text-center w-12 text-xs"></select>
+                                    <span class="text-white">:</span>
+                                    <select id="shiftEndMin" class="bg-slate-900 text-white rounded-lg p-1 border border-slate-700 font-bold text-center w-12 text-xs"></select>
+                                </div>
+                            </div>
+                            <div class="text-center p-1.5 bg-slate-800/40 rounded-lg">
+                                <span class="text-[8px] text-slate-400 block mb-1 uppercase">Ca sau bắt đầu lúc</span>
+                                <div class="flex items-center justify-center gap-1">
+                                    <select id="nextShiftStartHour" class="bg-slate-900 text-white rounded-lg p-1 border border-slate-700 font-bold text-center w-12 text-xs"></select>
+                                    <span class="text-white">:</span>
+                                    <select id="nextShiftStartMin" class="bg-slate-900 text-white rounded-lg p-1 border border-slate-700 font-bold text-center w-12 text-xs"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-6 text-center text-slate-500 text-[9px] font-bold uppercase tracking-[0.3em]">
+            Hệ Thống Quản Lý Sản Xuất • Giao Diện Tối Ưu Xuyên Đêm 24H
+        </footer>
+    </div>
+
+    <script>
+        // Khởi tạo các danh sách dropdown giờ và phút 24h khi tải trang
+        window.onload = () => {
+            // Thiết lập giá trị mặc định cho Ngày bắt đầu là ngày hiện tại
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('startDate').value = `${year}-${month}-${day}`;
+
+            // Tạo danh sách Option cho Giờ (00-23) và Phút (00-59)
+            populateDropdown('startHour', 23, now.getHours());
+            populateDropdown('startMin', 59, now.getMinutes());
+            
+            populateDropdown('mealStartHour', 23, 11);
+            populateDropdown('mealStartMin', 59, 30);
+            
+            // Thiết lập mặc định: Kết thúc ca lúc 16:35
+            populateDropdown('shiftEndHour', 23, 16);
+            populateDropdown('shiftEndMin', 59, 35);
+            
+            // Thiết lập mặc định: Ca sau bắt đầu lúc 22:00
+            populateDropdown('nextShiftStartHour', 23, 22);
+            populateDropdown('nextShiftStartMin', 59, 0);
+
+            // Tự động tính toán khi có bất kỳ thay đổi nào từ phía người dùng
+            const allInputs = document.querySelectorAll('input, select');
+            allInputs.forEach(input => {
+                input.addEventListener('change', calculate);
+            });
+        };
+
+        // Hàm điền dữ liệu số dạng 2 chữ số vào dropdown select
+        function populateDropdown(elementId, maxVal, defaultVal) {
+            const select = document.getElementById(elementId);
+            select.innerHTML = '';
+            for (let i = 0; i <= maxVal; i++) {
+                const opt = document.createElement('option');
+                const valStr = String(i).padStart(2, '0');
+                opt.value = valStr;
+                opt.innerText = valStr;
+                if (i === defaultVal) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            }
+        }
+
+        /**
+         * Kiểm tra xem phút hiện tại trong ngày có trùng khớp với thời điểm ăn uống (Cố định 40 phút) không.
+         */
+        function isMealMinute(currentDate, mealHour, mealMin) {
+            // Tạo đối tượng mốc ăn uống dựa vào ngày của currentDate
+            const mealStart = new Date(currentDate);
+            mealStart.setHours(mealHour, mealMin, 0, 0);
+
+            // Trường hợp xuyên đêm: Nếu thời điểm ăn nhỏ hơn thời điểm bắt đầu sản xuất quá sâu, 
+            // có thể cần dịch sang mốc ngày kế tiếp hoặc kiểm tra cửa sổ 40 phút.
+            const mealEnd = new Date(mealStart.getTime() + 40 * 60000);
+
+            return (currentDate >= mealStart && currentDate < mealEnd);
+        }
+
+        /**
+         * Kiểm tra xem phút hiện tại trong ngày có trùng khớp với mốc nghỉ giữa ca không.
+         */
+        function isShiftGapMinute(currentDate, endHour, endMin, startHour, startMin) {
+            const currentMinutes = currentDate.getHours() * 60 + currentDate.getMinutes();
+            const endMins = endHour * 60 + endMin;
+            const startMins = startHour * 60 + startMin;
+
+            if (endMins === startMins) {
+                return false; // Không có thời gian trống giữa ca
+            }
+
+            if (startMins > endMins) {
+                // Ca nghỉ nằm gọn trong cùng một ngày (ví dụ: 16:30 - 17:30)
+                return (currentMinutes >= endMins && currentMinutes < startMins);
+            } else {
+                // Ca nghỉ xuyên đêm qua ngày hôm sau (ví dụ: 22:00 - 06:00)
+                return (currentMinutes >= endMins || currentMinutes < startMins);
+            }
+        }
+
+        /**
+         * Kiểm tra xem phút hiện tại có phải là mốc nghỉ giữa giờ cố định không:
+         * 1. 04:00 - 04:10 (10 phút)
+         * 2. 10:00 - 10:05 (5 phút)
+         * 3. 15:00 - 15:05 (5 phút)
+         */
+        function isFixedBreakMinute(currentDate) {
+            const h = currentDate.getHours();
+            const m = currentDate.getMinutes();
+
+            if (h === 4 && m >= 0 && m < 10) return true;
+            if (h === 10 && m >= 0 && m < 5) return true;
+            if (h === 15 && m >= 0 && m < 5) return true;
+            return false;
+        }
+
+        function calculate() {
+            const startDateStr = document.getElementById('startDate').value;
+            if (!startDateStr) return;
+
+            const startHour = parseInt(document.getElementById('startHour').value);
+            const startMin = parseInt(document.getElementById('startMin').value);
+
+            const totalSets = parseFloat(document.getElementById('totalSets').value);
+            const tacktime = parseFloat(document.getElementById('tacktime').value);
+            const downtime = parseFloat(document.getElementById('downtime').value) || 0;
+
+            const mealH = parseInt(document.getElementById('mealStartHour').value);
+            const mealM = parseInt(document.getElementById('mealStartMin').value);
+
+            const shiftEndH = parseInt(document.getElementById('shiftEndHour').value);
+            const shiftEndM = parseInt(document.getElementById('shiftEndMin').value);
+            const nextShiftStartH = parseInt(document.getElementById('nextShiftStartHour').value);
+            const nextShiftStartM = parseInt(document.getElementById('nextShiftStartMin').value);
+
+            if (isNaN(totalSets) || isNaN(tacktime)) {
+                return; // Đợi nhập đầy đủ số set và Tacktime
+            }
+
+            // 1. Tạo mốc thời gian bắt đầu chính xác
+            const startTime = new Date(startDateStr);
+            startTime.setHours(startHour, startMin, 0, 0);
+
+            // Tính tổng thời gian cần làm việc thuần túy (Sản xuất + Dừng máy) chuyển đổi sang Phút
+            const rawProductionMins = (totalSets * tacktime) / 60;
+            const targetWorkingMinutes = rawProductionMins + downtime;
+
+            // 2. Chạy bộ giả lập từng phút (Minute-by-minute Simulation)
+            let currentTime = new Date(startTime.getTime());
+            let completedWorkingMinutes = 0;
+
+            let totalBreakMins = 0;
+            let totalMealMins = 0;
+            let totalGapMins = 0;
+
+            // Đặt giới hạn vòng lặp tối đa để tránh treo trình duyệt nếu dữ liệu không hợp lệ (ví dụ: làm việc liên tục 30 ngày)
+            let safetyCounter = 0;
+            const maxMinutesLimit = 43200; // 30 ngày
+
+            while (completedWorkingMinutes < targetWorkingMinutes && safetyCounter < maxMinutesLimit) {
+                safetyCounter++;
+
+                // Thử ưu tiên phân loại phút hiện tại
+                // A. Kiểm tra mốc nghỉ trống giữa ca trước (Vì không có ai làm việc trong khoảng này)
+                if (isShiftGapMinute(currentTime, shiftEndH, shiftEndM, nextShiftStartH, nextShiftStartM)) {
+                    totalGapMins++;
+                    currentTime.setTime(currentTime.getTime() + 60000); // Nhảy sang phút tiếp theo
+                    continue;
+                }
+
+                // B. Kiểm tra mốc đi ăn (Cố định 40 phút)
+                if (isMealMinute(currentTime, mealH, mealM)) {
+                    totalMealMins++;
+                    currentTime.setTime(currentTime.getTime() + 60000);
+                    continue;
+                }
+
+                // C. Kiểm tra mốc nghỉ ngắn cố định (4:00, 10:00, 15:00)
+                if (isFixedBreakMinute(currentTime)) {
+                    totalBreakMins++;
+                    currentTime.setTime(currentTime.getTime() + 60000);
+                    continue;
+                }
+
+                // D. Nếu không vướng thời gian nghỉ nào -> Thực tế sản xuất
+                completedWorkingMinutes++;
+                currentTime.setTime(currentTime.getTime() + 60000);
+            }
+
+            // 3. Kết xuất kết quả cuối cùng từ giả lập
+            const finalDate = currentTime;
+
+            // Định dạng hiển thị Ngày/Tháng Giờ:Phút (24h)
+            const d = String(finalDate.getDate()).padStart(2, '0');
+            const m = String(finalDate.getMonth() + 1).padStart(2, '0');
+            const hh = String(finalDate.getHours()).padStart(2, '0');
+            const mm = String(finalDate.getMinutes()).padStart(2, '0');
+
+            // Cập nhật giao diện chính
+            const resultElement = document.getElementById('resultDisplay');
+            resultElement.innerText = `${d}/${m} ${hh}:${mm}`;
+            
+            // Cập nhật chi tiết phân tách
+            document.getElementById('calcBreakTime').innerText = `${totalBreakMins} phút`;
+            document.getElementById('calcMealTime').innerText = `${totalMealMins} phút`;
+            document.getElementById('calcGapTime').innerText = `${totalGapMins} phút`;
+            document.getElementById('calcProdTime').innerText = `${Math.round(targetWorkingMinutes)} phút`;
+
+            const totalDurationMins = Math.round((finalDate.getTime() - startTime.getTime()) / 60000);
+            const hTotal = Math.floor(totalDurationMins / 60);
+            const mTotal = totalDurationMins % 60;
+            document.getElementById('totalDurationDisplay').innerText = `Tổng thời gian xử lý: ${hTotal} giờ ${mTotal} phút`;
+        }
+    </script>
+</body>
+</html>
