@@ -20,15 +20,16 @@
         .result-gradient {
             background: linear-gradient(135deg, #6366f1 0%, #d946ef 100%);
         }
-        /* Custom scrollbar for beautiful dropdowns */
-        select::-webkit-scrollbar {
+        /* Custom scrollbar for beautiful dropdowns and lists */
+        select::-webkit-scrollbar, div::-webkit-scrollbar {
             width: 6px;
         }
-        select::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.5);
+        select::-webkit-scrollbar-track, div::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 3px;
         }
-        select::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.5);
+        select::-webkit-scrollbar-thumb, div::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.4);
             border-radius: 3px;
         }
     </style>
@@ -119,20 +120,28 @@
                     </div>
                 </div>
 
-                <!-- THÔNG SỐ SẢN XUẤT -->
-                <div class="glass-card p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
-                    <h2 class="font-bold text-slate-300 uppercase text-[11px] mb-3 flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span> Thông số Tacktime
-                    </h2>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-[9px] font-black text-slate-400 mb-0.5">SỐ SET CẦN SẢN XUẤT</label>
-                            <input type="number" id="totalSets" placeholder="Nhập số set" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg focus:border-indigo-500 outline-none font-bold text-base text-white">
-                        </div>
-                        <div>
-                            <label class="block text-[9px] font-black text-indigo-400 mb-0.5">TACKTIME (GIÂY / SET)</label>
-                            <input type="number" id="tacktime" value="30" class="w-full p-2.5 bg-slate-900 border border-indigo-500/40 rounded-lg focus:border-indigo-400 outline-none font-bold text-lg text-indigo-300">
-                        </div>
+                <!-- THÔNG SỐ SẢN XUẤT CHO NHIỀU MÃ HÀNG -->
+                <div class="glass-card p-4 rounded-xl shadow-sm border-l-4 border-indigo-500 flex flex-col">
+                    <div class="flex justify-between items-center mb-2.5">
+                        <h2 class="font-bold text-slate-300 uppercase text-[11px] flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span> Mã hàng - Tack time
+                        </h2>
+                        <button type="button" onclick="addProductRow()" class="py-1 px-2.5 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 rounded-lg text-[9px] font-black text-indigo-300 uppercase tracking-wider transition-all flex items-center gap-1">
+                            + Thêm mã hàng
+                        </button>
+                    </div>
+
+                    <!-- Header của bảng danh sách mã hàng -->
+                    <div class="grid grid-cols-12 gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-1 text-center">
+                        <div class="col-span-5 text-left">Tên mã hàng</div>
+                        <div class="col-span-3">Số set</div>
+                        <div class="col-span-3">Tacktime (s)</div>
+                        <div class="col-span-1">Xóa</div>
+                    </div>
+
+                    <!-- Vùng cuộn danh sách mã hàng tránh cuộn cả trang -->
+                    <div id="productListContainer" class="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                        <!-- Các hàng sản phẩm sẽ được chèn tự động tại đây bằng JS -->
                     </div>
                 </div>
             </div>
@@ -230,8 +239,11 @@
             populateDropdown('nextShiftStartHour', 23, 22);
             populateDropdown('nextShiftStartMin', 59, 0);
 
+            // Thêm mã hàng mặc định đầu tiên: sửa từ "Mã hàng 1" thành "MH 1"
+            addProductRow('MH 1', 500, 30);
+
             // Tự động tính toán khi có bất kỳ thay đổi nào từ phía người dùng
-            const allInputs = document.querySelectorAll('input, select');
+            const allInputs = document.querySelectorAll('#startDate, #startHour, #startMin, #downtime, #mealStartHour, #mealStartMin, #shiftEndHour, #shiftEndMin, #nextShiftStartHour, #nextShiftStartMin');
             allInputs.forEach(input => {
                 input.addEventListener('change', calculate);
             });
@@ -283,6 +295,51 @@
                 }
                 select.appendChild(opt);
             });
+        }
+
+        // Hàm tạo thêm một hàng mã hàng mới
+        function addProductRow(name = '', sets = '', tack = '') {
+            const container = document.getElementById('productListContainer');
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'product-row grid grid-cols-12 gap-1.5 items-center bg-slate-900/60 p-1.5 rounded-lg border border-slate-800/80';
+            
+            rowDiv.innerHTML = `
+                <div class="col-span-5">
+                    <input type="text" placeholder="Tên mã" class="prod-name w-full p-1.5 bg-slate-950 border border-slate-800 rounded-md text-[11px] text-white focus:border-indigo-500 outline-none" value="${name}">
+                </div>
+                <div class="col-span-3">
+                    <input type="number" placeholder="Set" class="prod-sets w-full p-1.5 bg-slate-950 border border-slate-800 rounded-md text-[11px] text-white font-extrabold text-center focus:border-indigo-500 outline-none" value="${sets}" oninput="calculate()">
+                </div>
+                <div class="col-span-3">
+                    <input type="number" placeholder="Giây" class="prod-tack w-full p-1.5 bg-slate-950 border border-slate-800 rounded-md text-[11px] text-indigo-300 font-extrabold text-center focus:border-indigo-500 outline-none" value="${tack}" oninput="calculate()">
+                </div>
+                <div class="col-span-1 text-center">
+                    <button type="button" onclick="removeProductRow(this)" class="text-rose-400 hover:text-rose-300 transition-colors p-1 flex justify-center items-center mx-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(rowDiv);
+            calculate();
+        }
+
+        // Hàm xóa một hàng mã hàng
+        function removeProductRow(button) {
+            const row = button.closest('.product-row');
+            const container = document.getElementById('productListContainer');
+            if (container.children.length > 1) {
+                row.remove();
+                calculate();
+            } else {
+                // Nếu chỉ còn 1 hàng thì không xóa hẳn mà reset rỗng
+                row.querySelector('.prod-name').value = '';
+                row.querySelector('.prod-sets').value = '';
+                row.querySelector('.prod-tack').value = '';
+                calculate();
+            }
         }
 
         /**
@@ -351,9 +408,6 @@
 
             const startHour = parseInt(document.getElementById('startHour').value);
             const startMin = parseInt(document.getElementById('startMin').value);
-
-            const totalSets = parseFloat(document.getElementById('totalSets').value);
-            const tacktime = parseFloat(document.getElementById('tacktime').value);
             const downtime = parseFloat(document.getElementById('downtime').value) || 0;
 
             const mealH = parseInt(document.getElementById('mealStartHour').value);
@@ -364,15 +418,36 @@
             const nextShiftStartH = parseInt(document.getElementById('nextShiftStartHour').value);
             const nextShiftStartM = parseInt(document.getElementById('nextShiftStartMin').value);
 
-            if (isNaN(totalSets) || isNaN(tacktime)) {
+            // Tính tổng thời gian sản xuất (Tacktime cộng dồn) của tất cả mã hàng trong danh sách
+            let rawProductionMins = 0;
+            let hasValidProduct = false;
+
+            const productRows = document.querySelectorAll('.product-row');
+            productRows.forEach(row => {
+                const sets = parseFloat(row.querySelector('.prod-sets').value) || 0;
+                const tack = parseFloat(row.querySelector('.prod-tack').value) || 0;
+                if (sets > 0 && tack > 0) {
+                    rawProductionMins += (sets * tack) / 60;
+                    hasValidProduct = true;
+                }
+            });
+
+            if (!hasValidProduct) {
+                // Đặt hiển thị về rỗng nếu chưa nhập mã hàng nào hợp lệ
+                document.getElementById('resultDisplay').innerText = "--/-- 00:00";
+                document.getElementById('totalDurationDisplay').innerText = "Tổng thời gian xử lý: 0 giờ 0 phút";
+                document.getElementById('calcBreakTime').innerText = "0 phút";
+                document.getElementById('calcMealTime').innerText = "0 phút";
+                document.getElementById('calcOtMealTime').innerText = "0 phút";
+                document.getElementById('calcGapTime').innerText = "0 phút";
+                document.getElementById('calcProdTime').innerText = "0 phút";
                 return; 
             }
 
+            const targetWorkingMinutes = rawProductionMins + downtime;
+
             const startTime = new Date(startDateStr);
             startTime.setHours(startHour, startMin, 0, 0);
-
-            const rawProductionMins = (totalSets * tacktime) / 60;
-            const targetWorkingMinutes = rawProductionMins + downtime;
 
             let currentTime = new Date(startTime.getTime());
             let completedWorkingMinutes = 0;
@@ -383,7 +458,7 @@
             let totalGapMins = 0;
 
             let safetyCounter = 0;
-            const maxMinutesLimit = 43200; 
+            const maxMinutesLimit = 86400; // Giới hạn giả lập trong 60 ngày tối đa
 
             while (completedWorkingMinutes < targetWorkingMinutes && safetyCounter < maxMinutesLimit) {
                 safetyCounter++;
