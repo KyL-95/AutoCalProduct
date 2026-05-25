@@ -65,7 +65,7 @@
             </div>
             
             <!-- Chi tiết phân rã thời gian tự động -->
-            <div class="mt-3 pt-3 border-t border-slate-700/50 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
+            <div class="mt-3 pt-3 border-t border-slate-700/50 grid grid-cols-2 sm:grid-cols-5 gap-2 text-[10px]">
                 <div class="bg-slate-800/40 p-2 rounded-lg border border-slate-700/30">
                     <span class="text-slate-400 block mb-0.5">Nghỉ giữa giờ tự tính:</span>
                     <span id="calcBreakTime" class="font-extrabold text-indigo-300">0 phút</span>
@@ -75,10 +75,14 @@
                     <span id="calcMealTime" class="font-extrabold text-pink-300">0 phút</span>
                 </div>
                 <div class="bg-slate-800/40 p-2 rounded-lg border border-slate-700/30">
+                    <span class="text-slate-400 block mb-0.5">Nghỉ ăn OT tự tính:</span>
+                    <span id="calcOtMealTime" class="font-extrabold text-purple-300">0 phút</span>
+                </div>
+                <div class="bg-slate-800/40 p-2 rounded-lg border border-slate-700/30">
                     <span class="text-slate-400 block mb-0.5">Thời gian chờ ca sau:</span>
                     <span id="calcGapTime" class="font-extrabold text-amber-300">0 phút</span>
                 </div>
-                <div class="bg-slate-800/40 p-2 rounded-lg border border-slate-700/30">
+                <div class="bg-slate-800/40 p-2 rounded-lg border border-slate-700/30 col-span-2 sm:col-span-1">
                     <span class="text-slate-400 block mb-0.5">Sản xuất & Dừng máy:</span>
                     <span id="calcProdTime" class="font-extrabold text-emerald-300">0 phút</span>
                 </div>
@@ -88,7 +92,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- CỘT TRÁI -->
             <div class="space-y-4">
-                <!-- THỜI ĐIỂM BẮT ĐẦU - GIỜ 24H HOÀN TOÀN -->
+                <!-- THỜI ĐIỂM BẮT ĐẦU -->
                 <div class="bg-amber-500/10 p-4 rounded-xl shadow-md border-2 border-amber-500/30">
                     <div class="flex items-center space-x-2 mb-3 text-amber-300">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -147,12 +151,12 @@
                             <input type="number" id="downtime" value="0" class="w-full p-2 bg-slate-900 border border-slate-700 rounded-lg outline-none focus:border-pink-500 font-semibold text-white text-sm">
                         </div>
                         <div class="opacity-70 bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 flex flex-col justify-center">
-                            <span class="text-[8px] font-black text-indigo-400 block uppercase leading-none">Nghỉ giữa giờ cố định</span>
-                            <span class="text-[9px] text-slate-300 mt-1 leading-tight">Tính tự động (04:00, 10:00, 15:00)</span>
+                            <span class="text-[8px] font-black text-indigo-400 block uppercase leading-none">Nghỉ & Ăn OT tự động</span>
+                            <span class="text-[9px] text-slate-300 mt-1 leading-tight">Nghỉ (04:00, 10:00, 15:00)<br>Ăn OT (06:00, 16:45)</span>
                         </div>
                     </div>
 
-                    <!-- THỜI ĐIỂM ĂN UỐNG (KHÔNG DÙNG AM/PM) -->
+                    <!-- THỜI ĐIỂM ĂN UỐNG (RÚT GỌN TÙY CHỌN) -->
                     <div class="p-3 bg-pink-950/20 rounded-xl border border-pink-500/20 mb-3">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-[9px] font-black text-pink-400 uppercase tracking-wider">Thời gian đi ăn (Cố định 40 phút)</label>
@@ -167,7 +171,7 @@
                         </div>
                     </div>
 
-                    <!-- THỜI GIAN TRỐNG GIỮA CA (KHÔNG DÙNG AM/PM) -->
+                    <!-- THỜI GIAN TRỐNG GIỮA CA -->
                     <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 shadow-inner">
                         <label class="block text-[9px] font-black text-slate-400 mb-2 tracking-widest uppercase text-center">Thời gian trống giữa ca</label>
                         <div class="grid grid-cols-2 gap-3">
@@ -208,12 +212,15 @@
             const day = String(now.getDate()).padStart(2, '0');
             document.getElementById('startDate').value = `${year}-${month}-${day}`;
 
-            // Tạo danh sách Option cho Giờ (00-23) và Phút (00-59)
+            // Tạo danh sách Option cho Giờ (00-23) và Phút (00-59) của Giờ bắt đầu
             populateDropdown('startHour', 23, now.getHours());
             populateDropdown('startMin', 59, now.getMinutes());
             
-            populateDropdown('mealStartHour', 23, 11);
-            populateDropdown('mealStartMin', 59, 30);
+            // Thiết lập dropdown chọn Giờ ăn (Chỉ gồm 00, 01, 11, 12)
+            populateCustomHourDropdown('mealStartHour', [0, 1, 11, 12], 11);
+            
+            // Thiết lập dropdown chọn Phút ăn (Chỉ gồm các giá trị từ 00 đến 55, bước nhảy là 5)
+            populateCustomMinDropdown('mealStartMin', [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55], 30);
             
             // Thiết lập mặc định: Kết thúc ca lúc 16:35
             populateDropdown('shiftEndHour', 23, 16);
@@ -230,14 +237,14 @@
             });
         };
 
-        // Hàm điền dữ liệu số dạng 2 chữ số vào dropdown select
+        // Hàm điền dữ liệu số dạng 2 chữ số vào dropdown select chuẩn
         function populateDropdown(elementId, maxVal, defaultVal) {
             const select = document.getElementById(elementId);
             select.innerHTML = '';
             for (let i = 0; i <= maxVal; i++) {
                 const opt = document.createElement('option');
                 const valStr = String(i).padStart(2, '0');
-                opt.value = valStr;
+                opt.value = i;
                 opt.innerText = valStr;
                 if (i === defaultVal) {
                     opt.selected = true;
@@ -246,18 +253,46 @@
             }
         }
 
+        // Điền dropdown giờ theo các giá trị chỉ định sẵn
+        function populateCustomHourDropdown(elementId, hourArray, defaultVal) {
+            const select = document.getElementById(elementId);
+            select.innerHTML = '';
+            hourArray.forEach(val => {
+                const opt = document.createElement('option');
+                const valStr = String(val).padStart(2, '0');
+                opt.value = val;
+                opt.innerText = valStr;
+                if (val === defaultVal) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+        }
+
+        // Điền dropdown phút theo các giá trị chỉ định sẵn
+        function populateCustomMinDropdown(elementId, minArray, defaultVal) {
+            const select = document.getElementById(elementId);
+            select.innerHTML = '';
+            minArray.forEach(val => {
+                const opt = document.createElement('option');
+                const valStr = String(val).padStart(2, '0');
+                opt.value = val;
+                opt.innerText = valStr;
+                if (val === defaultVal) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+        }
+
         /**
          * Kiểm tra xem phút hiện tại trong ngày có trùng khớp với thời điểm ăn uống (Cố định 40 phút) không.
          */
         function isMealMinute(currentDate, mealHour, mealMin) {
-            // Tạo đối tượng mốc ăn uống dựa vào ngày của currentDate
             const mealStart = new Date(currentDate);
             mealStart.setHours(mealHour, mealMin, 0, 0);
-
-            // Trường hợp xuyên đêm: Nếu thời điểm ăn nhỏ hơn thời điểm bắt đầu sản xuất quá sâu, 
-            // có thể cần dịch sang mốc ngày kế tiếp hoặc kiểm tra cửa sổ 40 phút.
+            
             const mealEnd = new Date(mealStart.getTime() + 40 * 60000);
-
             return (currentDate >= mealStart && currentDate < mealEnd);
         }
 
@@ -270,14 +305,12 @@
             const startMins = startHour * 60 + startMin;
 
             if (endMins === startMins) {
-                return false; // Không có thời gian trống giữa ca
+                return false; 
             }
 
             if (startMins > endMins) {
-                // Ca nghỉ nằm gọn trong cùng một ngày (ví dụ: 16:30 - 17:30)
                 return (currentMinutes >= endMins && currentMinutes < startMins);
             } else {
-                // Ca nghỉ xuyên đêm qua ngày hôm sau (ví dụ: 22:00 - 06:00)
                 return (currentMinutes >= endMins || currentMinutes < startMins);
             }
         }
@@ -295,6 +328,20 @@
             if (h === 4 && m >= 0 && m < 10) return true;
             if (h === 10 && m >= 0 && m < 5) return true;
             if (h === 15 && m >= 0 && m < 5) return true;
+            return false;
+        }
+
+        /**
+         * Kiểm tra xem phút hiện tại có phải là mốc Ăn OT cố định không:
+         * 1. 16:45 - 17:00 (15 phút)
+         * 2. 06:00 - 06:15 (15 phút)
+         */
+        function isOtMealMinute(currentDate) {
+            const h = currentDate.getHours();
+            const m = currentDate.getMinutes();
+
+            if (h === 16 && m >= 45 && m < 60) return true;
+            if (h === 6 && m >= 0 && m < 15) return true;
             return false;
         }
 
@@ -318,75 +365,75 @@
             const nextShiftStartM = parseInt(document.getElementById('nextShiftStartMin').value);
 
             if (isNaN(totalSets) || isNaN(tacktime)) {
-                return; // Đợi nhập đầy đủ số set và Tacktime
+                return; 
             }
 
-            // 1. Tạo mốc thời gian bắt đầu chính xác
             const startTime = new Date(startDateStr);
             startTime.setHours(startHour, startMin, 0, 0);
 
-            // Tính tổng thời gian cần làm việc thuần túy (Sản xuất + Dừng máy) chuyển đổi sang Phút
             const rawProductionMins = (totalSets * tacktime) / 60;
             const targetWorkingMinutes = rawProductionMins + downtime;
 
-            // 2. Chạy bộ giả lập từng phút (Minute-by-minute Simulation)
             let currentTime = new Date(startTime.getTime());
             let completedWorkingMinutes = 0;
 
             let totalBreakMins = 0;
             let totalMealMins = 0;
+            let totalOtMealMins = 0;
             let totalGapMins = 0;
 
-            // Đặt giới hạn vòng lặp tối đa để tránh treo trình duyệt nếu dữ liệu không hợp lệ (ví dụ: làm việc liên tục 30 ngày)
             let safetyCounter = 0;
-            const maxMinutesLimit = 43200; // 30 ngày
+            const maxMinutesLimit = 43200; 
 
             while (completedWorkingMinutes < targetWorkingMinutes && safetyCounter < maxMinutesLimit) {
                 safetyCounter++;
 
-                // Thử ưu tiên phân loại phút hiện tại
-                // A. Kiểm tra mốc nghỉ trống giữa ca trước (Vì không có ai làm việc trong khoảng này)
+                // A. Kiểm tra mốc nghỉ trống giữa ca trước
                 if (isShiftGapMinute(currentTime, shiftEndH, shiftEndM, nextShiftStartH, nextShiftStartM)) {
                     totalGapMins++;
-                    currentTime.setTime(currentTime.getTime() + 60000); // Nhảy sang phút tiếp theo
+                    currentTime.setTime(currentTime.getTime() + 60000); 
                     continue;
                 }
 
-                // B. Kiểm tra mốc đi ăn (Cố định 40 phút)
+                // B. Kiểm tra mốc đi ăn cố định (40 phút)
                 if (isMealMinute(currentTime, mealH, mealM)) {
                     totalMealMins++;
                     currentTime.setTime(currentTime.getTime() + 60000);
                     continue;
                 }
 
-                // C. Kiểm tra mốc nghỉ ngắn cố định (4:00, 10:00, 15:00)
+                // C. Kiểm tra mốc Ăn OT cố định (16:45-17:00 và 06:00-06:15)
+                if (isOtMealMinute(currentTime)) {
+                    totalOtMealMins++;
+                    currentTime.setTime(currentTime.getTime() + 60000);
+                    continue;
+                }
+
+                // D. Kiểm tra mốc nghỉ ngắn cố định (4:00, 10:00, 15:00)
                 if (isFixedBreakMinute(currentTime)) {
                     totalBreakMins++;
                     currentTime.setTime(currentTime.getTime() + 60000);
                     continue;
                 }
 
-                // D. Nếu không vướng thời gian nghỉ nào -> Thực tế sản xuất
+                // E. Tiến trình làm việc thực tế
                 completedWorkingMinutes++;
                 currentTime.setTime(currentTime.getTime() + 60000);
             }
 
-            // 3. Kết xuất kết quả cuối cùng từ giả lập
             const finalDate = currentTime;
 
-            // Định dạng hiển thị Ngày/Tháng Giờ:Phút (24h)
             const d = String(finalDate.getDate()).padStart(2, '0');
             const m = String(finalDate.getMonth() + 1).padStart(2, '0');
             const hh = String(finalDate.getHours()).padStart(2, '0');
             const mm = String(finalDate.getMinutes()).padStart(2, '0');
 
-            // Cập nhật giao diện chính
             const resultElement = document.getElementById('resultDisplay');
             resultElement.innerText = `${d}/${m} ${hh}:${mm}`;
             
-            // Cập nhật chi tiết phân tách
             document.getElementById('calcBreakTime').innerText = `${totalBreakMins} phút`;
             document.getElementById('calcMealTime').innerText = `${totalMealMins} phút`;
+            document.getElementById('calcOtMealTime').innerText = `${totalOtMealMins} phút`;
             document.getElementById('calcGapTime').innerText = `${totalGapMins} phút`;
             document.getElementById('calcProdTime').innerText = `${Math.round(targetWorkingMinutes)} phút`;
 
